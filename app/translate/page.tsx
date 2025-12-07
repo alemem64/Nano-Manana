@@ -9,11 +9,13 @@ import { Sidebar } from "@/components/layout/Sidebar";
 export default function TranslatePage() {
   const files = useAppStore((state) => state.files);
   const clearFiles = useAppStore((state) => state.clearFiles);
+  const setBatchSize = useAppStore((state) => state.setBatchSize);
 
-  // Clear files when navigating to this page
+  // Clear files and set default batch size when navigating to this page
   useEffect(() => {
     clearFiles();
-  }, [clearFiles]);
+    setBatchSize(8);
+  }, [clearFiles, setBatchSize]);
 
   return (
     <div className="flex h-[calc(100vh-4rem)]">
