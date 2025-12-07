@@ -51,8 +51,8 @@ export function FileCard({ file, index }: FileCardProps) {
     ? file.processedPreview 
     : file.preview;
 
-  // Calculate fill percentage (50 seconds = 100%) - smooth transition
-  const fillPercent = Math.min((elapsedSeconds / 50) * 100, 100);
+  // Calculate fill percentage (30 seconds = 100%) - smooth transition
+  const fillPercent = Math.min((elapsedSeconds / 30) * 100, 100);
 
   // Can open modal when not processing or waiting
   const canOpenModal = file.status === "pending" || file.status === "done";

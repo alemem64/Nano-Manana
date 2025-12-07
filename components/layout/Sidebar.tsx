@@ -66,16 +66,16 @@ export function Sidebar({ mode }: SidebarProps) {
   const maxBatchSize = mode === "colorize" ? 5 : 16;
   const allDone = files.length > 0 && files.every((f) => f.status === "done");
   
-  // Smooth progress: completed files + current batch progress (50s per batch)
+  // Smooth progress: completed files + current batch progress (30s per batch)
   const completedProgress = files.length > 0 ? (processedCount / files.length) * 100 : 0;
   const currentBatchFiles = files.filter((f) => f.status === "processing").length;
   const batchContribution = files.length > 0 && currentBatchFiles > 0
-    ? ((currentBatchFiles / files.length) * 100) * Math.min(batchElapsed / 50, 1)
+    ? ((currentBatchFiles / files.length) * 100) * Math.min(batchElapsed / 30, 1)
     : 0;
   const progress = Math.min(completedProgress + batchContribution, 100);
 
-  // Batch progress: smooth fill based on 50s expected time
-  const batchProgress = Math.min((batchElapsed / 50) * 100, 100);
+  // Batch progress: smooth fill based on 30s expected time
+  const batchProgress = Math.min((batchElapsed / 30) * 100, 100);
 
   const handleAction = async () => {
     if (allDone) {

@@ -65,7 +65,7 @@ async function translateSinglePage(
 
 /**
  * Process translation for all pages in batches
- * Sends batchSize pages simultaneously, waits for all to complete, then sends next batch
+ * Sends batchSize pages simultaneously, calls onPageComplete as each page completes
  */
 export async function processTranslation(
   files: File[],
@@ -89,17 +89,18 @@ export async function processTranslation(
     onPageProcessing(batchIndices);
 
     // Process all pages in this batch simultaneously
+    // Each promise calls onPageComplete immediately when done
     const batchPromises = batchIndices.map((index) =>
-      translateSinglePage(files[index], config, index)
+      translateSinglePage(files[index], config, index).then((result) => {
+        // Call onPageComplete immediately when this page is done
+        onPageComplete(result);
+        return result;
+      })
     );
 
     try {
-      const results = await Promise.all(batchPromises);
-
-      // Mark each page as complete
-      for (const result of results) {
-        onPageComplete(result);
-      }
+      // Wait for all pages in batch to complete before starting next batch
+      await Promise.all(batchPromises);
     } catch (error) {
       console.error(`Batch translation error:`, error);
       throw error;
