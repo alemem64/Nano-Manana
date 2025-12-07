@@ -5,6 +5,7 @@ import JSZip from "jszip";
 import { saveAs } from "file-saver";
 import { processTranslation, TranslateConfig } from "@/services/translate";
 import { processColorization } from "@/services/colorize";
+import { processColorizeAndTranslate, ColorizeAndTranslateConfig } from "@/services/colorizeAndTranslate";
 import { base64ToBlob, base64ToFile, ProcessedResult, Resolution as ApiResolution, parseApiError, ApiErrorType } from "@/services/core";
 
 export type FileStatus = "pending" | "waiting" | "processing" | "done";
@@ -26,7 +27,7 @@ export interface ManagedFile {
 
 export type Resolution = "1k" | "2k" | "3k" | "4k";
 export type SortOrder = "asc" | "desc";
-export type ProcessingMode = "colorize" | "translate";
+export type ProcessingMode = "colorize" | "translate" | "colorizeAndTranslate";
 
 interface AppState {
   // Files
@@ -273,12 +274,12 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     // Calculate total batches based on mode
     // For translate: simple batches of batchSize
-    // For colorize: progressive batches (1, 1, 2, 4, 4, ...) until batchSize reached
+    // For colorize/colorizeAndTranslate: progressive batches (1, 1, 2, 4, 4, ...) until batchSize reached
     let totalBatches: number;
     if (mode === "translate") {
       totalBatches = Math.ceil(files.length / batchSize);
     } else {
-      // Colorize batch sizes: 1, 1, 2, 3, 4, 4, 4, ... (capped at batchSize)
+      // Colorize/ColorizeAndTranslate batch sizes: 1, 1, 2, 3, 4, 4, 4, ... (capped at batchSize)
       // Batch 1: 1 page (no ref)
       // Batch 2: min(2, batchSize, 1) = 1 page
       // Batch 3: min(3, batchSize, 2) = 2 pages
@@ -356,6 +357,23 @@ export const useAppStore = create<AppState>((set, get) => ({
         };
 
         await processColorization(
+          originalFiles,
+          config,
+          (indices) => get().setFilesProcessing(indices),
+          (result) => get().setFileComplete(result),
+          (index) => get().getProcessedImageBase64(index)
+        );
+      } else if (mode === "colorizeAndTranslate") {
+        const config: ColorizeAndTranslateConfig = {
+          apiKey,
+          batchSize,
+          resolution: resolution.toUpperCase() as ApiResolution,
+          fromLanguage,
+          toLanguage,
+          displayBothLanguages: get().displayBothLanguages,
+        };
+
+        await processColorizeAndTranslate(
           originalFiles,
           config,
           (indices) => get().setFilesProcessing(indices),

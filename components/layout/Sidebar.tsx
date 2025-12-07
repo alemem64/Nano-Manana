@@ -65,7 +65,8 @@ export function Sidebar({ mode }: SidebarProps) {
     }
   }, [isProcessing, currentBatchStartTime]);
 
-  const maxBatchSize = mode === "colorize" ? 5 : 16;
+  // colorize uses max 5, translate uses max 16, colorizeAndTranslate uses max 5 (like colorize)
+  const maxBatchSize = mode === "translate" ? 16 : 5;
   const allDone = files.length > 0 && files.every((f) => f.status === "done");
   
   // Smooth progress: completed files + current batch progress (30s per batch)
@@ -90,17 +91,25 @@ export function Sidebar({ mode }: SidebarProps) {
   const getButtonText = () => {
     if (allDone) return t.actions.download;
     if (isProcessing) return t.actions.processing;
-    return mode === "colorize" ? t.actions.colorize : t.actions.translate;
+    if (mode === "colorize") return t.actions.colorize;
+    if (mode === "translate") return t.actions.translate;
+    return t.actions.colorizeAndTranslate;
   };
 
-  // Validation
+  // Validation - colorize only needs API key, translate and colorizeAndTranslate need languages too
   const canProcess = apiKey.trim() !== "" && 
     (mode === "colorize" || (fromLanguage.trim() !== "" && toLanguage.trim() !== ""));
+
+  const getTitle = () => {
+    if (mode === "colorize") return t.nav.colorize;
+    if (mode === "translate") return t.nav.translate;
+    return t.nav.colorizeAndTranslate;
+  };
 
   return (
     <aside className="w-80 bg-sec border-l border-sec p-6 flex flex-col h-full">
       <h2 className="text-xl font-bold text-pri mb-6 capitalize">
-        {mode === "colorize" ? t.nav.colorize : t.nav.translate}
+        {getTitle()}
       </h2>
 
       <div className="flex-1 space-y-6 overflow-y-auto">
@@ -172,8 +181,8 @@ export function Sidebar({ mode }: SidebarProps) {
           </div>
         </div>
 
-        {/* Language inputs (translate only) */}
-        {mode === "translate" && (
+        {/* Language inputs (translate and colorizeAndTranslate) */}
+        {(mode === "translate" || mode === "colorizeAndTranslate") && (
           <>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-sec">

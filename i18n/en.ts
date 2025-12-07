@@ -6,6 +6,7 @@ export const en = {
   nav: {
     colorize: "Colorize",
     translate: "Translate",
+    colorizeAndTranslate: "Colorize & Translate",
   },
 
   // Theme
@@ -25,6 +26,10 @@ export const en = {
     translateCard: {
       title: "Translate",
       description: "Translate manga text to different languages",
+    },
+    colorizeAndTranslateCard: {
+      title: "Colorize & Translate",
+      description: "Colorize and translate manga pages in one step",
     },
   },
 
@@ -52,6 +57,7 @@ export const en = {
   actions: {
     colorize: "Colorize!",
     translate: "Translate!",
+    colorizeAndTranslate: "Colorize & Translate!",
     processing: "Processing...",
     download: "Download Zip",
     clear: "Clear All",

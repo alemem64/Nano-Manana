@@ -53,6 +53,16 @@ export function TopNav() {
               >
                 {t.nav.translate}
               </Link>
+              <Link
+                href="/colorize-and-translate"
+                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isActive("/colorize-and-translate")
+                    ? "bg-hl text-hl"
+                    : "text-sec hover:bg-sec hover:text-pri"
+                }`}
+              >
+                {t.nav.colorizeAndTranslate}
+              </Link>
             </div>
           </div>
 
