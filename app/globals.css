@@ -1,0 +1,144 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    /* Primary: Clean Black/White */
+    --pri-txt: #09090b;
+    --pri-bg: #ffffff;
+    --pri-bd: #e4e4e7;
+
+    /* Secondary: Bluish Gray (Cooler tone) */
+    --sec-txt: #475569;
+    --sec-bg: #f8fafc;
+    --sec-bd: #e2e8f0;
+
+    /* Tertiary: Faint/Disabled */
+    --ter-txt: #94a3b8;
+    --ter-bg: #f1f5f9;
+    --ter-bd: #e2e8f0;
+
+    /* Highlight: Yellow */
+    --hl-txt: #854d0e;
+    --hl-bg: #ffe100;
+    --hl-bd: #ffc800;
+
+    --bd-radius: 0.5rem;
+  }
+
+  .dark {
+    /* Primary: Dark neutral background */
+    --pri-txt: #e4e4e7;
+    --pri-bg: #18181b;
+    --pri-bd: #3f3f46;
+
+    /* Secondary: Slightly lighter dark */
+    --sec-txt: #a1a1aa;
+    --sec-bg: #27272a;
+    --sec-bd: #3f3f46;
+
+    /* Tertiary: Even lighter for disabled/faint */
+    --ter-txt: #71717a;
+    --ter-bg: #1f1f23;
+    --ter-bd: #3f3f46;
+
+    /* Highlight: Warm amber for dark mode */
+    --hl-txt: #271a00;
+    --hl-bg: #fbbf24;
+    --hl-bd: #fbbf24;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-[var(--pri-bd)];
+  }
+
+  body {
+    @apply bg-[var(--pri-bg)] text-[var(--pri-txt)];
+  }
+}
+
+@layer utilities {
+  .bg-pri {
+    background-color: var(--pri-bg);
+  }
+  .bg-sec {
+    background-color: var(--sec-bg);
+  }
+  .bg-ter {
+    background-color: var(--ter-bg);
+  }
+  .bg-hl {
+    background-color: var(--hl-bg);
+  }
+
+  .text-pri {
+    color: var(--pri-txt);
+  }
+  .text-sec {
+    color: var(--sec-txt);
+  }
+  .text-ter {
+    color: var(--ter-txt);
+  }
+  .text-hl {
+    color: var(--hl-txt);
+  }
+
+  .border-pri {
+    border-color: var(--pri-bd);
+  }
+  .border-sec {
+    border-color: var(--sec-bd);
+  }
+  .border-ter {
+    border-color: var(--ter-bd);
+  }
+  .border-hl {
+    border-color: var(--hl-bd);
+  }
+}
+
+/* Shimmer animation for processing state */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--sec-bg) 25%,
+    var(--ter-bg) 50%,
+    var(--sec-bg) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Shimmer overlay - semi-transparent shimmer over image */
+.shimmer-overlay {
+  background: linear-gradient(
+    90deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+:root.dark .shimmer-overlay {
+  background: linear-gradient(
+    90deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.15) 50%,
+    transparent 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
