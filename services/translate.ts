@@ -25,7 +25,7 @@ export interface TranslateConfig extends ProcessingConfig {
  * Generate translation prompt
  */
 function getTranslationPrompt(fromLanguage: string, toLanguage: string): string {
-  return `Translate this manga page from ${fromLanguage} to ${toLanguage}. Maintain all other characters, backgrounds, speech balloon's shape, grids and manga structure. You have to translate speech balloon's text, onomatopoeia handwritten text, and all other texts which are not ${toLanguage}.`;
+  return `Translate this manga page from ${fromLanguage} to ${toLanguage}. Maintain all other characters, backgrounds, speech balloon's shape, grids and manga structure. Make image which has EXACTLY SAME ratio and layout with original one. You have to translate speech balloon's text, onomatopoeia handwritten text, and all other texts which are not ${toLanguage}.`;
 }
 
 /**
