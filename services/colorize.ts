@@ -35,7 +35,7 @@ COLORING STYLE REQUIREMENTS:
 - Make the coloring look professional and polished like a published color manga.
 
 CONSISTENCY REQUIREMENTS:
-- Maintain consistency for the same character, but if the character is wearing new clothing, draw them with appropriate different clothing.
+- MAINTAIN COSISTENCY FOR THE SAME CHARACTER, but if the character is wearing new clothing, draw same character with appropriate different clothing .
 - Maintain cosmetic features (eye color, hair color, skin tone) consistently for each character across all pages.
 - Maintain consistency in background colors and object colors when they reappear.
 - Color different characters with distinct colors, but the same character must be colored consistently.

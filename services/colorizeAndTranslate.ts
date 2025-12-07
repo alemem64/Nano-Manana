@@ -55,7 +55,6 @@ COLOR CONSISTENCY REQUIREMENTS:
 - Maintain consistency in background colors and object colors when they reappear.
 - Color different characters with distinct colors, but the same character must be colored consistently.
 - If a character is wearing new clothing, draw them with appropriate different clothing colors.
-- Do NOT change character expressions or gestures. Retain the original appearance.
 
 TRANSLATION REQUIREMENTS:
 - Do NOT translate literally word-by-word. Think about context, character emotions, and scene atmosphere.
@@ -67,8 +66,8 @@ TRANSLATION REQUIREMENTS:
 IMAGE REQUIREMENTS:
 - The original image size is ${aspectRatioStr}. Make image which has EXACTLY SAME ratio and layout with original one.
 - Preserve speech balloon shapes, panel grids, and all structural elements.
-- Do NOT add completely new characters or objects that are not present in the original image. Just colorize existing elements.
-- Color each panel's scene exactly as shown - do not add, modify, or remove scenes.
+- Do NOT add completely new characters or objects that are not present in the original image. JUST COLORIZE EXISTING ELEMENTS.
+- Color each panel's scene EXACTLY as shown - DO NOT ADD, MODIFY, OR REMOVE SCENES.
 
 Colorize and translate the following image:`;
 }
