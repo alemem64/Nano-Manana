@@ -171,6 +171,58 @@ export function base64ToFile(base64: string, mimeType: string, filename: string)
 }
 
 /**
+ * Calculate Greatest Common Divisor (GCD) using Euclidean algorithm
+ */
+export function gcd(a: number, b: number): number {
+  a = Math.abs(Math.round(a));
+  b = Math.abs(Math.round(b));
+  while (b !== 0) {
+    const temp = b;
+    b = a % b;
+    a = temp;
+  }
+  return a;
+}
+
+/**
+ * Calculate aspect ratio from image dimensions
+ * Returns simplified ratio using GCD
+ */
+export function calculateAspectRatio(width: number, height: number): { width: number; height: number; ratioX: number; ratioY: number } {
+  const divisor = gcd(width, height);
+  return {
+    width,
+    height,
+    ratioX: width / divisor,
+    ratioY: height / divisor,
+  };
+}
+
+/**
+ * Get image dimensions from a File
+ */
+export function getImageDimensions(file: File): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      resolve({ width: img.width, height: img.height });
+      URL.revokeObjectURL(img.src);
+    };
+    img.onerror = reject;
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+/**
+ * Format aspect ratio string for prompt
+ * Returns: "{width}x{height} which is about {ratioX}:{ratioY}"
+ */
+export function formatAspectRatioForPrompt(width: number, height: number): string {
+  const { ratioX, ratioY } = calculateAspectRatio(width, height);
+  return `${width}x${height} which is about ${ratioX}:${ratioY}`;
+}
+
+/**
  * Error types for localization
  */
 export type ApiErrorType = 

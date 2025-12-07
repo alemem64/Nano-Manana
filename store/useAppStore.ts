@@ -269,20 +269,36 @@ export const useAppStore = create<AppState>((set, get) => ({
 
     // Calculate total batches based on mode
     // For translate: simple batches of batchSize
-    // For colorize: first page alone, then batchSize-1 pages, then batchSize pages each
+    // For colorize: progressive batches (1, 1, 2, 4, 4, ...) until batchSize reached
     let totalBatches: number;
     if (mode === "translate") {
       totalBatches = Math.ceil(files.length / batchSize);
     } else {
-      // Colorize: 1 (first page) + 1 (pages 2 to batchSize) + remaining batches
-      if (files.length === 1) {
-        totalBatches = 1;
-      } else if (files.length <= batchSize) {
-        totalBatches = 2;
-      } else {
-        const remainingAfterBatch2 = files.length - batchSize;
-        totalBatches = 2 + Math.ceil(remainingAfterBatch2 / batchSize);
+      // Colorize batch sizes: 1, 1, 2, 3, 4, 4, 4, ... (capped at batchSize)
+      // Batch 1: 1 page (no ref)
+      // Batch 2: min(2, batchSize, 1) = 1 page
+      // Batch 3: min(3, batchSize, 2) = 2 pages
+      // Batch 4: min(4, batchSize, 4) = min(4, batchSize) pages
+      // Batch 5+: batchSize pages each
+      let remaining = files.length;
+      let batchNum = 1;
+      let completed = 0;
+      
+      while (remaining > 0) {
+        let batchCount: number;
+        if (batchNum === 1) {
+          batchCount = 1;
+        } else {
+          batchCount = Math.min(batchNum, batchSize, completed);
+        }
+        batchCount = Math.min(batchCount, remaining);
+        
+        remaining -= batchCount;
+        completed += batchCount;
+        batchNum++;
       }
+      
+      totalBatches = batchNum - 1;
     }
 
     const now = Date.now();

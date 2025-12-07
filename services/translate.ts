@@ -13,6 +13,8 @@ import {
   createTextPart,
   callGeminiImageAPI,
   formatResolution,
+  getImageDimensions,
+  formatAspectRatioForPrompt,
 } from "./core";
 import { debugLogger } from "./debug";
 
@@ -24,8 +26,20 @@ export interface TranslateConfig extends ProcessingConfig {
 /**
  * Generate translation prompt
  */
-function getTranslationPrompt(fromLanguage: string, toLanguage: string): string {
-  return `Translate this manga page from ${fromLanguage} to ${toLanguage}. Maintain all other characters, backgrounds, speech balloon's shape, grids and manga structure. Make image which has EXACTLY SAME ratio and layout with original one. You have to translate speech balloon's text, onomatopoeia handwritten text, and all other texts which are not ${toLanguage}.`;
+function getTranslationPrompt(fromLanguage: string, toLanguage: string, aspectRatioStr: string): string {
+  return `Translate this manga page from ${fromLanguage} to ${toLanguage}. 
+
+IMPORTANT TRANSLATION GUIDELINES:
+- Do NOT translate literally word-by-word. Instead, think about the context, character emotions, and scene atmosphere.
+- Adapt the translation to sound natural in ${toLanguage} while preserving the original meaning and tone.
+- Consider manga-specific expressions, onomatopoeia, and cultural nuances when translating.
+- Make the dialogue flow naturally as if it was originally written in ${toLanguage}.
+
+IMAGE REQUIREMENTS:
+- Maintain all characters, backgrounds, speech balloon shapes, panel grids, and manga structure.
+- The original image size is ${aspectRatioStr}. Make image which has EXACTLY SAME ratio and layout with original one.
+- Translate speech balloon text, onomatopoeia, handwritten text, and all other texts that are not in ${toLanguage}.
+- Keep all visual elements unchanged except for the translated text.`;
 }
 
 /**
@@ -38,7 +52,12 @@ async function translateSinglePage(
 ): Promise<ProcessedResult> {
   const base64 = await fileToBase64(file);
   const mimeType = getMimeType(file);
-  const prompt = getTranslationPrompt(config.fromLanguage, config.toLanguage);
+  
+  // Calculate aspect ratio for the image
+  const { width, height } = await getImageDimensions(file);
+  const aspectRatioStr = formatAspectRatioForPrompt(width, height);
+  
+  const prompt = getTranslationPrompt(config.fromLanguage, config.toLanguage, aspectRatioStr);
 
   const contents: ContentPart[] = [
     createTextPart(prompt),

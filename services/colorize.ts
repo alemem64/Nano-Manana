@@ -13,18 +13,42 @@ import {
   createTextPart,
   callGeminiImageAPI,
   formatResolution,
+  getImageDimensions,
+  formatAspectRatioForPrompt,
 } from "./core";
 import { debugLogger } from "./debug";
 
 /**
  * Generate colorization prompt
  */
-function getColorizationPrompt(refPageCount: number): string {
+function getColorizationPrompt(refPageCount: number, aspectRatioStr: string): string {
   const refPages = refPageCount > 0 
     ? `the ${refPageCount} reference image(s) attached above` 
     : "no reference images";
   
-  return `Colorize the manga page below. Refer to ${refPages} to maintain consistency in character eye color, skin color, hair color, and clothing color. Make image which has EXACTLY SAME ratio and layout with original one. Maintain consistency for the same character, but if the character is wearing new clothing in the image below, draw them with appropriate different clothing. Color different characters with distinct colors, but the same character must be colored consistently. Preserve speech balloons, onomatopoeia, backgrounds, grids, and all structural elements. Do not modify or delete any text - keep all text exactly as is. Do not change character expressions or gestures - only apply colors. Color each panel's scene exactly as shown - do not add different scenes, modify scenes, or remove scenes. Colorize the following image:`;
+  return `Colorize the manga page below. Refer to ${refPages} to maintain consistency in character eye color, skin color, hair color, and clothing color.
+
+COLORING STYLE REQUIREMENTS:
+- Apply vibrant, rich, and diverse colors throughout the entire image.
+- Do NOT leave any area uncolored - fill every part with appropriate colors including backgrounds, objects, and small details.
+- Use a colorful and visually appealing palette that brings the manga to life.
+- Add depth and dimension with shading and highlights where appropriate.
+- Make the coloring look professional and polished like a published color manga.
+
+CONSISTENCY REQUIREMENTS:
+- Maintain consistency for the same character, but if the character is wearing new clothing, draw them with appropriate different clothing.
+- Maintain cosmetic features (eye color, hair color, skin tone) consistently for each character across all pages.
+- Maintain consistency in background colors and object colors when they reappear.
+- Color different characters with distinct colors, but the same character must be colored consistently.
+
+IMAGE REQUIREMENTS:
+- The original image size is ${aspectRatioStr}. Make image which has EXACTLY SAME ratio and layout with original one.
+- Preserve speech balloons, onomatopoeia, backgrounds, grids, and all structural elements.
+- Do not modify or delete any text - keep all text exactly as is.
+- Do not change character expressions or gestures - only apply colors.
+- Color each panel's scene exactly as shown - do not add different scenes, modify scenes, or remove scenes.
+
+Colorize the following image:`;
 }
 
 /**
@@ -53,8 +77,12 @@ async function buildSinglePageRequest(
   contents.push(createTextPart(`Colorize page ${pageIndex + 1}:`));
   contents.push(createImagePart(base64, mimeType));
 
+  // Calculate aspect ratio for the image
+  const { width, height } = await getImageDimensions(file);
+  const aspectRatioStr = formatAspectRatioForPrompt(width, height);
+
   // Add prompt
-  contents.push(createTextPart(getColorizationPrompt(refIndices.length)));
+  contents.push(createTextPart(getColorizationPrompt(refIndices.length, aspectRatioStr)));
 
   return contents;
 }
@@ -114,6 +142,9 @@ export async function processColorization(
     const refIndices = completedIndices.slice(refStartIndex);
 
     // Build parallel requests - one request per page, all using the same references
+    // Each request calls onPageComplete immediately when it finishes (not waiting for others)
+    const batchCompletedIndices: number[] = [];
+    
     const requestPromises = batchIndices.map(async (pageIndex) => {
       const contents = await buildSinglePageRequest(
         pageIndex,
@@ -130,19 +161,21 @@ export async function processColorization(
         requestId
       );
 
+      // Immediately notify completion when this request finishes
+      if (results.length > 0) {
+        onPageComplete({ ...results[0], index: pageIndex });
+        batchCompletedIndices.push(pageIndex);
+      }
+
       return { pageIndex, results };
     });
 
-    // Execute all requests in parallel
-    const batchResults = await Promise.all(requestPromises);
+    // Wait for all requests in this batch to complete before moving to next batch
+    await Promise.all(requestPromises);
 
-    // Process results in order
-    for (const { pageIndex, results } of batchResults) {
-      if (results.length > 0) {
-        onPageComplete({ ...results[0], index: pageIndex });
-        completedIndices.push(pageIndex);
-      }
-    }
+    // Add completed indices in order for reference tracking
+    batchCompletedIndices.sort((a, b) => a - b);
+    completedIndices.push(...batchCompletedIndices);
 
     currentIndex += batchCount;
     batchNumber++;
