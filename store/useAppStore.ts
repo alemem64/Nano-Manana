@@ -39,6 +39,7 @@ interface AppState {
   resolution: Resolution;
   fromLanguage: string;
   toLanguage: string;
+  displayBothLanguages: boolean;
 
   // Processing state
   isProcessing: boolean;
@@ -66,6 +67,7 @@ interface AppState {
   setResolution: (res: Resolution) => void;
   setFromLanguage: (lang: string) => void;
   setToLanguage: (lang: string) => void;
+  setDisplayBothLanguages: (value: boolean) => void;
 
   // Processing actions
   setFilesWaiting: (indices: number[]) => void;
@@ -93,6 +95,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   resolution: "2k",
   fromLanguage: "",
   toLanguage: "",
+  displayBothLanguages: false,
   isProcessing: false,
   processedCount: 0,
   currentMode: null,
@@ -203,6 +206,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   setResolution: (res: Resolution) => set({ resolution: res }),
   setFromLanguage: (lang: string) => set({ fromLanguage: lang }),
   setToLanguage: (lang: string) => set({ toLanguage: lang }),
+  setDisplayBothLanguages: (value: boolean) => set({ displayBothLanguages: value }),
 
   // Processing helper actions
   setFilesWaiting: (indices: number[]) => {
@@ -335,6 +339,7 @@ export const useAppStore = create<AppState>((set, get) => ({
           resolution: resolution.toUpperCase() as ApiResolution,
           fromLanguage,
           toLanguage,
+          displayBothLanguages: get().displayBothLanguages,
         };
 
         await processTranslation(

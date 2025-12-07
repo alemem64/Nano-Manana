@@ -45,6 +45,7 @@ export const en = {
     toLanguage: "To Language",
     fromPlaceholder: "Japanese",
     toPlaceholder: "English",
+    displayBothLanguages: "Display both languages",
   },
 
   // Actions

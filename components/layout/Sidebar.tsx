@@ -22,6 +22,7 @@ export function Sidebar({ mode }: SidebarProps) {
     resolution,
     fromLanguage,
     toLanguage,
+    displayBothLanguages,
     isProcessing,
     processedCount,
     errorType,
@@ -35,6 +36,7 @@ export function Sidebar({ mode }: SidebarProps) {
     setResolution,
     setFromLanguage,
     setToLanguage,
+    setDisplayBothLanguages,
     startProcessing,
     downloadZip,
     clearFiles,
@@ -196,6 +198,24 @@ export function Sidebar({ mode }: SidebarProps) {
                 placeholder={t.sidebar.toPlaceholder}
                 className="w-full px-3 py-2 rounded-md border border-sec bg-pri text-pri placeholder:text-ter focus:outline-none focus:ring-2 focus:ring-[var(--hl-bd)]"
               />
+            </div>
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-sec">
+                {t.sidebar.displayBothLanguages}
+              </label>
+              <button
+                type="button"
+                onClick={() => setDisplayBothLanguages(!displayBothLanguages)}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  displayBothLanguages ? "bg-[var(--hl-bd)]" : "bg-ter"
+                }`}
+              >
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    displayBothLanguages ? "translate-x-6" : "translate-x-1"
+                  }`}
+                />
+              </button>
             </div>
           </>
         )}
