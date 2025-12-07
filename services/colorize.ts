@@ -30,7 +30,6 @@ function getColorizationPrompt(refPageCount: number, aspectRatioStr: string): st
 
 COLORING STYLE REQUIREMENTS:
 - Apply vibrant, rich, and diverse colors throughout the entire image.
-- Do NOT leave any area uncolored - fill every part with appropriate colors including backgrounds, objects, and small details.
 - Use a colorful and visually appealing palette that brings the manga to life.
 - Add depth and dimension with shading and highlights where appropriate.
 - Make the coloring look professional and polished like a published color manga.
@@ -180,4 +179,50 @@ export async function processColorization(
     currentIndex += batchCount;
     batchNumber++;
   }
+}
+
+/**
+ * Rerun a single page for colorization
+ * Uses up to (batchSize - 1) previous completed pages as references
+ */
+export async function rerunColorizePage(
+  file: File,
+  config: ProcessingConfig,
+  pageIndex: number,
+  getProcessedImageBase64: (index: number) => Promise<string | null>
+): Promise<ProcessedResult> {
+  // Calculate reference indices: up to (batchSize - 1) previous pages that have results
+  const refIndices: number[] = [];
+  const maxRefs = config.batchSize - 1;
+  
+  for (let i = pageIndex - 1; i >= 0 && refIndices.length < maxRefs; i--) {
+    const refBase64 = await getProcessedImageBase64(i);
+    if (refBase64) {
+      refIndices.unshift(i); // Add to front to maintain order
+    }
+  }
+
+  const contents = await buildSinglePageRequest(
+    pageIndex,
+    file,
+    refIndices,
+    getProcessedImageBase64
+  );
+
+  const requestId = `colorize_rerun_page${pageIndex + 1}_${Date.now()}`;
+  const results = await callGeminiImageAPI(
+    config.apiKey,
+    contents,
+    formatResolution(config.resolution),
+    requestId
+  );
+
+  if (results.length === 0) {
+    throw new Error(`No image result for page ${pageIndex + 1}`);
+  }
+
+  return {
+    ...results[0],
+    index: pageIndex,
+  };
 }

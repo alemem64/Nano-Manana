@@ -3,12 +3,15 @@
 import { create } from "zustand";
 import JSZip from "jszip";
 import { saveAs } from "file-saver";
-import { processTranslation, TranslateConfig } from "@/services/translate";
-import { processColorization } from "@/services/colorize";
-import { processColorizeAndTranslate, ColorizeAndTranslateConfig } from "@/services/colorizeAndTranslate";
+import { processTranslation, TranslateConfig, rerunTranslatePage } from "@/services/translate";
+import { processColorization, rerunColorizePage } from "@/services/colorize";
+import { processColorizeAndTranslate, ColorizeAndTranslateConfig, rerunColorizeAndTranslatePage } from "@/services/colorizeAndTranslate";
 import { base64ToBlob, base64ToFile, ProcessedResult, Resolution as ApiResolution, parseApiError, ApiErrorType } from "@/services/core";
 
-export type FileStatus = "pending" | "waiting" | "processing" | "done";
+// Timeout constant for page processing (80 seconds)
+const PAGE_TIMEOUT_MS = 80000;
+
+export type FileStatus = "pending" | "waiting" | "processing" | "done" | "failed";
 
 export interface ManagedFile {
   id: string;
@@ -74,7 +77,9 @@ interface AppState {
   setFilesWaiting: (indices: number[]) => void;
   setFilesProcessing: (indices: number[]) => void;
   setFileComplete: (result: ProcessedResult) => void;
+  setFileFailed: (index: number) => void;
   startProcessing: (mode: ProcessingMode) => Promise<void>;
+  rerunPage: (index: number) => Promise<void>;
   downloadZip: () => Promise<void>;
   resetProcessing: () => void;
   getProcessedImageBase64: (index: number) => Promise<string | null>;
@@ -254,6 +259,16 @@ export const useAppStore = create<AppState>((set, get) => ({
           : f
       ),
       processedCount: state.processedCount + 1,
+    }));
+  },
+
+  setFileFailed: (index: number) => {
+    set((state) => ({
+      files: state.files.map((f, idx) =>
+        idx === index
+          ? { ...f, status: "failed" as FileStatus, processingStartTime: undefined }
+          : f
+      ),
     }));
   },
 
@@ -446,5 +461,76 @@ export const useAppStore = create<AppState>((set, get) => ({
       currentBatchIndex: 0,
       totalBatches: 0,
     }));
+  },
+
+  rerunPage: async (index: number) => {
+    const { files, apiKey, batchSize, resolution, fromLanguage, toLanguage, currentMode, displayBothLanguages } = get();
+    
+    if (index >= files.length || !apiKey || !currentMode) return;
+    if (get().isProcessing) return; // Don't allow rerun while processing
+
+    // Set file to processing state
+    const now = Date.now();
+    set((state) => ({
+      isProcessing: true,
+      files: state.files.map((f, idx) =>
+        idx === index
+          ? { ...f, status: "processing" as FileStatus, processingStartTime: now }
+          : f
+      ),
+    }));
+
+    try {
+      const file = files[index].file;
+      let result: ProcessedResult;
+
+      if (currentMode === "translate") {
+        const config: TranslateConfig = {
+          apiKey,
+          batchSize,
+          resolution: resolution.toUpperCase() as ApiResolution,
+          fromLanguage,
+          toLanguage,
+          displayBothLanguages,
+        };
+        result = await rerunTranslatePage(file, config, index);
+      } else if (currentMode === "colorize") {
+        const config = {
+          apiKey,
+          batchSize,
+          resolution: resolution.toUpperCase() as ApiResolution,
+        };
+        result = await rerunColorizePage(
+          file,
+          config,
+          index,
+          (idx) => get().getProcessedImageBase64(idx)
+        );
+      } else {
+        // colorizeAndTranslate
+        const config: ColorizeAndTranslateConfig = {
+          apiKey,
+          batchSize,
+          resolution: resolution.toUpperCase() as ApiResolution,
+          fromLanguage,
+          toLanguage,
+          displayBothLanguages,
+        };
+        result = await rerunColorizeAndTranslatePage(
+          file,
+          config,
+          index,
+          (idx) => get().getProcessedImageBase64(idx)
+        );
+      }
+
+      // Update file with result
+      get().setFileComplete(result);
+    } catch (error) {
+      console.error(`Rerun error for page ${index + 1}:`, error);
+      get().setFileFailed(index);
+    } finally {
+      set({ isProcessing: false });
+    }
   },
 }));

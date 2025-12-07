@@ -61,6 +61,7 @@ export const en = {
     processing: "Processing...",
     download: "Download Zip",
     clear: "Clear All",
+    rerun: "Rerun",
   },
 
   // Sorting

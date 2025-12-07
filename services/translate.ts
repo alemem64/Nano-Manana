@@ -131,3 +131,15 @@ export async function processTranslation(
     }
   }
 }
+
+/**
+ * Rerun a single page for translation
+ * Simply processes the original file without any references
+ */
+export async function rerunTranslatePage(
+  file: File,
+  config: TranslateConfig,
+  pageIndex: number
+): Promise<ProcessedResult> {
+  return translateSinglePage(file, config, pageIndex);
+}
